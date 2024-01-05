@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+app.use(express.json());
 
 app.get('/api/categories', async(req, res, next)=> {
   try {
@@ -23,6 +24,35 @@ app.get('/api/notes', async(req, res, next)=> {
     `;
     const response = await client.query(SQL);
     res.send(response.rows);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.post('/api/notes', async(req, res, next)=> {
+  try {
+    const SQL = `
+      INSERT INTO notes(txt, category_id)
+      VALUES ($1, $2)
+      RETURNING *
+    `;
+    const response = await client.query(SQL, [req.body.txt, req.body.category_id]);
+    res.send(response.rows[0]);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.delete('/api/notes/:id', async(req, res, next)=> {
+  try {
+    const SQL = `
+      DELETE FROM notes
+      WHERE id = $1
+    `;
+    const response = await client.query(SQL, [req.params.id]);
+    res.sendStatus(204);
   }
   catch(ex){
     next(ex);
