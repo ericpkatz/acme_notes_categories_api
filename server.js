@@ -45,6 +45,22 @@ app.post('/api/notes', async(req, res, next)=> {
   }
 });
 
+app.put('/api/notes/:id', async(req, res, next)=> {
+  try {
+    const SQL = `
+      UPDATE notes
+      SET txt=$1, ranking=$2, category_id=$3, updated_at=now()
+      WHERE id = $4
+      RETURNING *
+    `;
+    const response = await client.query(SQL, [req.body.txt, req.body.ranking, req.body.category_id, req.params.id]);
+    res.send(response.rows[0]);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
 app.delete('/api/notes/:id', async(req, res, next)=> {
   try {
     const SQL = `
@@ -57,6 +73,11 @@ app.delete('/api/notes/:id', async(req, res, next)=> {
   catch(ex){
     next(ex);
   }
+});
+
+app.use((error, req, res, next)=> {
+  console.log(error);
+  res.status(error.status || 500).send({ error });
 });
 
 const pg = require('pg');
